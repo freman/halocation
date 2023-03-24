@@ -42,7 +42,7 @@ For example.
     var states = {}
 
 	const bikeIcon = L.IconMaterial.icon({
-	  	icon: 'motorcycle',            // Name of Material icon
+	  	icon: 'motorcycle',                // Name of Material icon
 		iconColor: '#aa2187',              // Material icon color (could be rgba, hex, html name...)
 		markerColor: 'rgba(255,0,0,0.5)',  // Marker fill color
 		outlineColor: 'yellow',            // Marker outline color

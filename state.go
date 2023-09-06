@@ -32,6 +32,9 @@ func (lastState *LastState) Set(value ghc.StateEntity) {
 
 // List all current entities
 func (lastState *LastState) List() (result ghc.StateEntities) {
+	lastState.mu.Lock()
+	defer lastState.mu.Unlock()
+
 	for _, value := range lastState.state {
 		result = append(result, value)
 	}

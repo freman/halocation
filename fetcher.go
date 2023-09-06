@@ -62,5 +62,11 @@ func (fetcher *Fetcher) fetchEntity(ctx context.Context, entity string) {
 		log.Warn().Err(err).Str("entity_id", entity).Msg("Failed to get state.")
 		return
 	}
+
+	if position, has := estate.Attributes["position"].(bool); has && !position {
+		log.Debug().Str("entity_id", entity).Msg("Position is invalid")
+		return
+	}
+
 	fetcher.State.Set(estate)
 }

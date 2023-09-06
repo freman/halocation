@@ -30,6 +30,7 @@ func main() {
 	pollInterval := flag.Duration("poll-interval", 5*time.Second, "Rate of polling")
 	maxConcurrency := flag.Int("concurrency", 2, "Polling concurrency")
 	listen := flag.String("listen", ":9922", "Listen configuration for HTTP traffic")
+	ringSize := flag.Int("ring", 0, "Use a ring buffer to store history")
 	logLevel := flag.String("log-level", zerolog.LevelInfoValue, "Log level")
 	flag.Var(&entities, "entity", "Entity ID to export, repeat flag or comma separate for more")
 	help := flag.Bool("help", false, "Show command arguments")
@@ -57,6 +58,10 @@ func main() {
 
 	state := &location.EmittingState{
 		State: &location.LastState{},
+	}
+
+	if *ringSize > 0 {
+		state.State = &location.RingState{Size: *ringSize}
 	}
 
 	fetcher := location.Fetcher{

@@ -25,6 +25,7 @@ docker push registry/path/location
 - `-listen` Listen configuration for HTTP traffic (default ":9922")
 - `-log-level` Log level(default "info")
 - `-poll-interval` Rate of polling (default 5s)
+- `-ring` Switches to using a ring buffer of the given size for historical storage
 - `-token` Home Assistant token [env: HA_TOKEN]
 - `-url` Home Assistant URL [env: HA_URL]
 

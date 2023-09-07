@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
+	github.com/davecgh/go-spew v1.1.1
 	github.com/freman/sse v0.0.0-20220523094817-8df02573c9db
 	github.com/labstack/echo/v4 v4.10.0
 	github.com/mkelcik/go-ha-client v0.4.0

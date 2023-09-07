@@ -7,7 +7,7 @@ import (
 	ghc "github.com/mkelcik/go-ha-client"
 )
 
-// RingState fulfills the State interface and stores the last known state
+// RingState fulfills the State interface and stores a ring buffer of the last known state
 type RingState struct {
 	mu    sync.RWMutex
 	state map[string]*ring.Ring

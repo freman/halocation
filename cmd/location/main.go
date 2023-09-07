@@ -31,6 +31,8 @@ func main() {
 	maxConcurrency := flag.Int("concurrency", 2, "Polling concurrency")
 	listen := flag.String("listen", ":9922", "Listen configuration for HTTP traffic")
 	ringSize := flag.Int("ring", 0, "Use a ring buffer to store history")
+	bootstrap := flag.Duration("bootstrap", 0, "Ask Home Assistant for event history on startup for the given duration")
+	filter := flag.Bool("filter", false, "Filter out some useless/bad data (missing coordinates, no position lock)")
 	logLevel := flag.String("log-level", zerolog.LevelInfoValue, "Log level")
 	flag.Var(&entities, "entity", "Entity ID to export, repeat flag or comma separate for more")
 	help := flag.Bool("help", false, "Show command arguments")
@@ -41,28 +43,15 @@ func main() {
 		flag.PrintDefaults()
 		return
 	}
-	setupLogging(*logLevel)
 
-	log.Debug().Strs("entities", entities).Msg("polling for entitites")
+	setupLogging(*logLevel)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	client := ghc.NewClient(ghc.ClientConfig{Token: *haToken, Host: *haURL}, &http.Client{
-		Timeout: 30 * time.Second,
-	})
+	client := setupHAClient(ctx, *haToken, *haURL)
 
-	if err := initialPing(ctx, client); err != nil {
-		log.Fatal().Stack().Err(err).Msg("Failed to ping Home Assistant.")
-	}
-
-	state := &location.EmittingState{
-		State: &location.LastState{},
-	}
-
-	if *ringSize > 0 {
-		state.State = &location.RingState{Size: *ringSize}
-	}
+	state := setupState(*ringSize, *filter)
 
 	fetcher := location.Fetcher{
 		MaxConcurrency: *maxConcurrency,
@@ -70,6 +59,7 @@ func main() {
 		State:          state,
 		Entities:       []string(entities),
 		Client:         client,
+		Bootstrap:      *bootstrap,
 	}
 
 	bus := sse.New(sse.WithOnConnect(func(e sse.Emitter) {
@@ -107,6 +97,38 @@ func setupLogging(level string) {
 	}
 
 	log.Fatal().Err(err).Msg("Failed to configure log level")
+}
+
+func setupHAClient(ctx context.Context, haToken, haURL string) *ghc.Client {
+	client := ghc.NewClient(ghc.ClientConfig{Token: haToken, Host: haURL}, &http.Client{
+		Timeout: 30 * time.Second,
+	})
+
+	if err := initialPing(ctx, client); err != nil {
+		log.Fatal().Stack().Err(err).Msg("Failed to ping Home Assistant.")
+	}
+
+	return client
+}
+
+func setupState(ringSize int, filter bool) *location.EmittingState {
+	state := &location.EmittingState{
+		State: &location.LastState{},
+	}
+
+	if ringSize > 0 {
+		// Ring is provided, install the ring state instead of the original state
+		state.State = &location.RingState{Size: ringSize}
+	}
+
+	if filter {
+		// Filter is provided install it before the current state
+		state.State = &location.FilterState{
+			Parent: state.State,
+		}
+	}
+
+	return state
 }
 
 func setupEcho(bus *sse.EventStream, client *ghc.Client) *echo.Echo {

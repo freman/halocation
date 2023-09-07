@@ -24,14 +24,23 @@ docker push registry/path/location
 - `-entity` Entity ID to export, repeat flag or comma separate for more
 - `-listen` Listen configuration for HTTP traffic (default ":9922")
 - `-log-level` Log level(default "info")
-- `-poll-interval` Rate of polling (default 5s)
+- `-poll-interval` Rate of polling [duration](#duration) (default 5s)
 - `-ring` Switches to using a ring buffer of the given size for historical storage
+- `-bootstrap` Ask Home Assistant for event history on startup for the given [duration](#duration)
+- `-filter` Filter out some useless/bad data (missing coordinates, no position lock)
 - `-token` Home Assistant token [env: HA_TOKEN]
 - `-url` Home Assistant URL [env: HA_URL]
 
 ## Environment
 
 As you may have noticed, you can opt to provide `HA_TOKEN` and `HA_URL` instead of using the `-token` and -url `flags`
+
+## Duration
+
+A duration is a sequence of decimal numbers, each with optional fraction and a unit suffix
+such as "300ms", "1.5h" or "2h45m".
+
+Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 
 ## Use
 

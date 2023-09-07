@@ -51,7 +51,7 @@ func main() {
 
 	client := setupHAClient(ctx, *haToken, *haURL)
 
-	state := setupState(*ringSize, *filter)
+	state, estate := setupState(*ringSize, *filter)
 
 	fetcher := location.Fetcher{
 		MaxConcurrency: *maxConcurrency,
@@ -70,7 +70,7 @@ func main() {
 		}
 	}))
 
-	state.OnState = func(value ghc.StateEntity) {
+	estate.OnState = func(value ghc.StateEntity) {
 		log.Trace().Str("entity_id", value.EntityId).Msg("Emitting state")
 		bus.Emit(value)
 	}
@@ -111,24 +111,24 @@ func setupHAClient(ctx context.Context, haToken, haURL string) *ghc.Client {
 	return client
 }
 
-func setupState(ringSize int, filter bool) *location.EmittingState {
-	state := &location.EmittingState{
+func setupState(ringSize int, filter bool) (location.State, *location.EmittingState) {
+	estate := &location.EmittingState{
 		State: &location.LastState{},
 	}
 
 	if ringSize > 0 {
 		// Ring is provided, install the ring state instead of the original state
-		state.State = &location.RingState{Size: ringSize}
+		estate.State = &location.RingState{Size: ringSize}
 	}
 
 	if filter {
 		// Filter is provided install it before the current state
-		state.State = &location.FilterState{
-			Parent: state.State,
-		}
+		return &location.FilterState{
+			Parent: estate,
+		}, estate
 	}
 
-	return state
+	return estate, estate
 }
 
 func setupEcho(bus *sse.EventStream, client *ghc.Client) *echo.Echo {
